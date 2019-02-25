@@ -34,7 +34,50 @@ class TowerOfHanoiGame(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### student code goes here
-        pass
+        state = []
+        peg1 = []
+        peg2 = []
+        peg3 = []
+        for fact in self.kb.facts:
+            if str(fact.statement) == "(on disk1 peg1)":
+                peg1.append(1)
+            elif str(fact.statement) == "(on disk2 peg1)":
+                peg1.append(2)
+            elif str(fact.statement) == "(on disk3 peg1)":
+                peg1.append(3)
+            elif str(fact.statement) == "(on disk4 peg1)":
+                peg1.append(4)
+            elif str(fact.statement) == "(on disk5 peg1)":
+                peg1.append(5)
+            elif str(fact.statement) == "(on disk1 peg2)":
+                peg2.append(1)
+            elif str(fact.statement) == "(on disk2 peg2)":
+                peg2.append(2)
+            elif str(fact.statement) == "(on disk3 peg2)":
+                peg2.append(3)
+            elif str(fact.statement) == "(on disk4 peg2)":
+                peg2.append(4)
+            elif str(fact.statement) == "(on disk5 peg2)":
+                peg2.append(5)
+            elif str(fact.statement) == "(on disk1 peg3)":
+                peg3.append(1)
+            elif str(fact.statement) == "(on disk2 peg3)":
+                peg3.append(2)
+            elif str(fact.statement) == "(on disk3 peg3)":
+                peg3.append(3)
+            elif str(fact.statement) == "(on disk4 peg3)":
+                peg3.append(4)
+            elif str(fact.statement) == "(on disk5 peg3)":
+                peg3.append(5)
+
+        peg1.sort()
+        peg2.sort()
+        peg3.sort()
+        state.append(tuple(peg1))
+        state.append(tuple(peg2))
+        state.append(tuple(peg3)) 
+        return (tuple(state))        
+        
 
     def makeMove(self, movable_statement):
         """
@@ -52,7 +95,57 @@ class TowerOfHanoiGame(GameMaster):
         Returns:
             None
         """
+
+        
         ### Student code goes here
+
+        ### move to another peg
+        ## need to
+        statement = str(movable_statement).split()
+        disk = statement[1]
+        pegfrom = statement[2]
+        pegfromNum = int(pegfrom[-1]) -1 
+        pegto = statement[3] 
+        pegto = pegto[:-1]
+        pegtoNum = int(pegto[-1]) -1 
+
+        currentState = self.getGameState()
+        pegfromTuple = currentState[pegfromNum]
+        pegtoTuple = currentState[pegtoNum]
+
+        #retract disk on pegfrom
+        #retract top disk pegfrom
+        
+        self.kb.kb_retract(parse_input("fact: (top " + disk + " " + pegfrom + ")"))
+        self.kb.kb_retract(parse_input("fact: (on " + disk + " " + pegfrom + ")"))
+        
+        #if pegfrom only has one element:
+        if len(pegfromTuple) == 1:
+            #assert empty peg
+            self.kb.kb_assert(parse_input("fact: (empty " + pegfrom + ")"))
+        else:
+            #assert (top (2ndToLast) fromPeg)
+            self.kb.kb_assert(parse_input("fact: (top disk" + str(pegfromTuple[1])  + " "+ pegfrom + ")"))
+            #retract (onTopOf disk (2ndToLast))
+            self.kb.kb_retract(parse_input("fact: (onTopOf " + disk + " disk" + str(pegfromTuple[1]) + ")"))
+
+        if len(pegtoTuple) == 0:
+            self.kb.kb_retract(parse_input("fact: (empty " + pegto + ")"))
+        else:
+            #retract (top (last element) toPeg)
+            self.kb.kb_retract(parse_input("fact: (top disk" + str(pegtoTuple[0]) + " " + pegto + ")"))
+            #assert (onTopOf disk (oldtop))
+            self.kb.kb_assert(parse_input("fact: (onTopOf " + disk + " disk"+ str(pegtoTuple[0]) + ")"))
+
+        #normal
+        #assert (top disk pegTo)
+        self.kb.kb_assert(parse_input("fact: (top " + disk + " "+ pegto + ")"))
+        #assert (on disk pegTo)
+        self.kb.kb_assert(parse_input("fact: (on " + disk + " "+ pegto + ")"))
+
+            
+        
+        
         pass
 
     def reverseMove(self, movable_statement):
@@ -99,6 +192,48 @@ class Puzzle8Game(GameMaster):
         Returns:
             A Tuple of Tuples that represent the game state
         """
+        state = []
+        row1 = []
+        row2 = []
+        row3 = []
+        rows = [[], row1, row2, row3]
+        
+
+        for i in range(1, 4):
+            for j in range(1, 4):
+                currCell = self.kb.kb_ask(parse_input("fact: (coordinate ?x pos" +str(j) + " pos" + str(i) + ")"))
+                currtile = str(currCell[0].bindings[0].constant)
+                if currtile == "tile1":
+                    rows[i].append(1)
+                elif currtile == "tile2":
+                    rows[i].append(2)
+                elif currtile == "tile3":
+                    rows[i].append(3)
+                elif currtile == "tile4":
+                    rows[i].append(4)
+                elif currtile == "tile5":
+                    rows[i].append(5)
+                elif currtile == "tile6":
+                    rows[i].append(6)
+                elif currtile == "tile7":
+                    rows[i].append(7)
+                elif currtile == "tile8":
+                    rows[i].append(8)
+                elif currtile == "tile9":
+                    rows[i].append(9)
+                elif currtile == "empty":
+                    rows[i].append(-1)
+
+        
+
+
+        state.append(tuple(row1))
+        state.append(tuple(row2))
+        state.append(tuple(row3))
+        return (tuple(state))  
+
+
+        
         ### Student code goes here
         pass
 
@@ -118,7 +253,34 @@ class Puzzle8Game(GameMaster):
         Returns:
             None
         """
+
+        statement = str(movable_statement).split()
+       
+        tile = statement[1]
+        fromPos = statement[2] + " " + statement[3]
+        toPos = statement[4] + " " + statement[5][:-1]
+
+        #retract tile from old pos
+        #print("fact: (coordinate " + tile + " " + fromPos + ")")
+        self.kb.kb_retract(parse_input("fact: (coordinate " + tile + " " + fromPos + ")"))
+        #retract empty from new pos
+        #print("fact: (coordinate empty " + toPos + ")")
+        self.kb.kb_retract(parse_input("fact: (coordinate empty " + toPos + ")"))
+        #assert new position of empty tile
+        #print("fact: (coordinate empty " + fromPos + ")")
+        self.kb.kb_assert(parse_input("fact: (coordinate empty " + fromPos + ")"))
+        #assert new position of moved tile
+        #print("fact: (coordinate " + tile + " " + toPos + ")")
+        self.kb.kb_assert(parse_input("fact: (coordinate " + tile + " " + toPos + ")"))
+        
+
+
+        
         ### Student code goes here
+
+
+
+        
         pass
 
     def reverseMove(self, movable_statement):
